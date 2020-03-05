@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.js"></script>
+    <script type="text/javascript">
+        console.log("send");
+        function loginRes(res) {
+            console.log(res)
+            if (res.ok) {
+                console.log("success")
+                window.location.href = "./index"
+            }
+            else {
+                console.log("failed");
+                for (var i = 0; i < 3; i++) {
+                    $("#password").toggleClass("shine");
+                    setTimeout(function () {
+                        $("#password").toggleClass("shine");
+                    }, 250);
+                }
+            }
+        }
+        function submit() {
+            const userName = "admin";
+            const passWord = document.getElementById("password").value;
+            const url = '/userLoginIn';
+            const data = {
+                username: userName,
+                password: passWord
+            };
+            fetch(url, {
+                method: 'POST', // or 'PUT'
+                body: JSON.stringify(data), // data can be `string` or {object}!
+                headers: new Headers({
+                    'Content-Type': 'application/json'
+                })
+            }).then(response => loginRes(response))
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+    <style type="text/css">
+        body {
+            background: #00796B;
+        }
+
+        .main-container {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            margin-top: -180px;
+            margin-left: -200px;
+            height: 360px;
+            width: 400px;
+            background: #2C3A47;
+            box-shadow: 0 0 10px #000;
+            border-radius: 10px;
+        }
+
+        .main-container a {
+            font-size: 36px;
+            color: white;
+            position: absolute;
+            text-align: center;
+            left: 50%;
+            width: 200px;
+            margin-left: -100px;
+            top: 50px;
+
+        }
+
+        .password {
+            position: absolute;
+            text-align: center;
+            left: 50%;
+            top: 155px;
+            height: 50px;
+            width: 280px;
+            margin-left: -145px;
+            border: 5px solid #0984e3;
+            border-radius: 50px;
+            font-size: 36px;
+            background: #2C3A47;
+            box-shadow: 0 0 5px #000;
+            transition: .25s;
+        }
+
+        .password:focus {
+            width: 360px;
+            margin-left: -185px;
+            outline: none;
+            border: 5px solid #00b894;
+            background: white;
+            box-shadow: 0 0 20px #000;
+        }
+
+        .password:hover {
+            box-shadow: 0 0 20px #000;
+        }
+
+        .shine.password {
+            border: 5px solid #C2185B;
+        }
+
+        .login {
+            position: absolute;
+            width: 100px;
+            height: 50px;
+            left: 50%;
+            margin-left: -55px;
+            top: 280px;
+            border-radius: 50px;
+            border: 5px solid #00b894;
+            transition: .25s;
+            font-size: 16px;
+            background: #2C3A47;
+            color: white;
+        }
+
+        .login:hover {
+            background: #00b894;
+            outline: none;
+        }
+
+        .login:focus {
+            outline: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-container">
+        <a class="loginHeader">Login</a>
+        <input type="password" class="password" id="password">
+        <button class="login" onclick="submit()">Login</button>
+    </div>
+</body>
+
+</html>

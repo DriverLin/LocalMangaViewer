@@ -1,0 +1,219 @@
+*{
+    list-style: none;
+    text-decoration: none;
+}
+body {
+    padding: 0;
+    margin: 0;
+    background: #00796B;
+}
+img {
+    border: none;
+}
+a {
+    text-decoration: none;
+    color: #444;
+}
+a:hover {
+    color: #999;
+}
+/* 定义关键帧 */
+@-webkit-keyframes shade {
+    from {
+        opacity: 1;
+    }
+    15% {
+        opacity: 0.4;
+    }
+    to {
+        opacity: 1;
+    }
+}
+@keyframes shade {
+    from {
+        opacity: 1;
+    }
+    15% {
+        opacity: 0.4;
+    }
+    to {
+        opacity: 1;
+    }
+}
+/* wrap */
+        
+#wrap {
+    width: auto;
+    height: auto;
+    margin: 200px auto;
+    position: relative;
+}
+
+#wrap .box {
+    width: 280px;
+    height: auto;
+    padding: 10px;
+    border: none;
+    float: left;
+}
+
+
+
+
+#wrap .box .info {
+    width: 280px;
+    height: auto;
+    border-radius: 0px;
+    box-shadow: 0 0 11px #666;
+    background: #fff;
+    border-radius: 4px;
+}
+
+#wrap .box .info .pic {
+    width: 260px;
+    height: auto;
+    margin: 0 auto;
+    padding-top: 10px;
+}
+#wrap .box .info .pic:hover {
+    -webkit-animation: shade 3s ease-in-out 1;
+    animation: shade 3s ease-in-out 1;
+}
+#wrap .box .info .pic img {
+    width: 260px;
+    height: auto;
+}
+#wrap .box .info .title {
+    text-indent: 10px;
+    width: 260px;
+    margin: 0 auto;
+    line-height: 40px;
+    text-align: center;
+    color: #666;
+    font-size: 20px;
+    font-weight: bold;
+    overflow: hidden;
+    text-align: left
+}
+.searchBar{
+    width: 880px;            
+    margin-top: -130px;
+    display: flex;
+    position: fixed;
+    z-index: 1;
+    margin-left: -440px;
+    left: 50%;
+    height: 72px;
+    background-color: #ffff;
+    box-shadow: 0px 0px 20px 1px rgba(0,0,0,0.9); 
+    border-radius: 4px;
+}
+.searchBar input{
+    float: left;
+    flex: 4;
+    height: 72px;
+    outline: none;
+    border: none;
+    box-sizing: border-box;
+    padding-left: 10px;
+    border-radius: 0px 0;
+    font-size: 24px;
+}
+.searchBar button{
+    height: 72px;
+    width: 72px;
+    background-color: white;
+    color: white;
+    border-style: none;
+    outline: none;
+    border-radius: 0px 0;
+    border-radius: 4px;
+}
+.sidemenu{
+    position: fixed;
+    margin-top: -200px;
+    width: 630px;
+    height: 120%;
+    background-color:#C2185B;
+    z-index: 3;
+    left: -800px;
+    transition: .2s;
+}
+
+.active.sidemenu{
+    left: 0px;
+}
+.mask{
+    position: fixed;
+    margin-top: -200px;
+    width: 0px;
+    height: 120%;
+    background-color:rgba(0, 0, 0, 0);
+    transition: background-color .2s;
+    z-index: 2;
+}
+.active.mask{
+    background-color:rgba(0, 0, 0, 0.4);
+}
+.sidemenu .headPic{
+    height: 200px;
+    width: 100%;
+    background-color: white;
+}
+
+.menu{
+    width: 630px;
+    border-radius: 0px;
+    overflow: hidden;
+}
+
+.item{
+    border-top: 1px solid white;
+    overflow: hidden;
+}
+
+.btn{
+    display: block;
+    padding:42px 32px;
+    background-color: #C2185B;
+    color: white;
+    position: relative;
+    font-size: 24px;
+    font-family: sans-serif;
+}
+
+.smenu{
+    background: #E91E63;
+    overflow: hidden;
+    transition: max-height .3s;
+    max-height: 0;
+}
+.active.smenu {
+    max-height: 10em;
+}
+
+.smenu a{
+    display: block;
+    padding:24px 40px;
+    font-size: 20px;
+    color: white;
+    margin: 4px 0;
+    position: relative;
+    background-color: #E91E63;
+}
+
+.smenu a:before{
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 100%;
+    background: #3498db;
+    left: 0;
+    top: 0;
+    transition: .3s;
+    opacity: 0;
+}
+
+.smenu a:hover:before{
+    opacity: 1;
+}
