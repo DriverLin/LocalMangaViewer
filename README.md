@@ -4,6 +4,13 @@
 	瀑布流展示漫画画廊
 	根据TAG和关键词检索画廊
 	使用浏览器浏览画廊并下载
+截图:
+==
+![image](https://github.com/DriverLin/LocalMangaViewer/blob/master/screenshots/QQ%E6%88%AA%E5%9B%BE20200305143649.png)
+
+![image](https://github.com/DriverLin/LocalMangaViewer/blob/master/screenshots/QQ%E6%88%AA%E5%9B%BE20200305143745.png)
+
+![image](https://github.com/DriverLin/LocalMangaViewer/blob/master/screenshots/QQ%E6%88%AA%E5%9B%BE20200305143815.png)
 
 使用说明
 ==
