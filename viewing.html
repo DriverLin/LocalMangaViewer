@@ -232,7 +232,7 @@
                 }).then(function (blob) {
                     const objectURL = URL.createObjectURL(blob);
                     $(id).append(`
-                        <div class="pic"><img src="${objectURL}">
+                        <div class="pic"><img src="${objectURL}"></div>
                     `)
                     $(id).removeClass("loading")
                     imageSet[data['pics'][index]] = blob;
