@@ -13,7 +13,7 @@
 	修改具体内容可以查看pythonServer.py文件
 如何添加画廊
 ==
-	理想情况是，移动端开，PC端开，使用DownloadFromRemote.py来同步
+	理想情况是，移动端开一个，PC端开一个，使用DownloadFromRemote.py来同步
 	手动添加画廊需要添加封面到cover，修改data.js ，画廊目录下创建profile.js ，画廊文件放入Gallarys
 	封面格式为jpg
 	android端通过'update.py'和'cj创建画廊配置文件'可以在Ehviewer目录下直接更新
