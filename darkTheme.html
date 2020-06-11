@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>EXGallary</title>
+    <link rel="stylesheet" type="text/css" href="./CSSs/darkTheme.css">
+</head>
+
+<body>
+    <div class="sidemenu">
+        <div class="headPic">
+
+        </div>
+        <div class="menu">
+            <li class="item" id="profile">
+                <a class="btn" href="javascript:menuAnime('profile')">排序方式</a>
+                <div class="smenu">
+                    <a href="javascript:changeSortOrder('order')">顺序</a>
+                    <a href="javascript:changeSortOrder('random')">随机</a>
+                </div>
+            </li>
+        </div>
+    </div>
+    <div class="mask" onclick="javascript:closemenu();">
+
+    </div>
+    <div class='searchBar'>
+        <button id="openmenu" onclick="openmenu()"><img src="./souces/menu.png"></button>
+        <input type="text" id="searchWord" onkeydown="enterSearching(event)" />
+        <button id="search" onclick="search()"><img src="./souces/search.png "> </button>
+    </div>
+
+    <div id="wrap">
+
+    </div>
+    <script src="./ajaxjs/jquery-1.7.2.js"></script>
+    <script src="./Data.js?ver=12"></script>
+    <script src="./translation.js"></script>
+    <script src="./jsZIP/jszip.min.js"></script>
+    <script src="./jsZIP/FileSaver.js"></script>
+    <script type="text/javascript">
+        var totalAddingImges = 0;//处于请求队列中的图片的数量
+        var preLoadImage = []
+        var wrap = $('#wrap');
+        var dataKeys = Object.keys(data);
+        function sortNum(a, b) {
+            return parseInt(b.split("_")[0]) - parseInt(a.split("_")[0]);//JS里具有data  datakeys考虑到搜索需要 动态生成
+        }
+        dataKeys.sort(sortNum);
+        var count = 0, totalCount = dataKeys.length;
+
+        if (window.location.search != '') {
+            var argKey = decodeURI(window.location.search.substring(1)).split("=")[0];
+            var argValue = decodeURI(window.location.search.substring(1)).split("=")[1];
+            if (argKey == "searching") {
+                if (argValue.search("[A-Za-z0-9]+:[A-Za-z0-9]+") == 0) {//是tag检索
+                    var row = argValue.split(":")[0]
+                    var name = argValue.split(":")[1]
+                    dataKeys = []
+                    for (var key in data) {
+                        if (data[key]['tags'][row].indexOf(name) > -1) {
+                            dataKeys.push(key)
+                        }
+                    }
+                    dataKeys.sort()
+                    totalCount = dataKeys.length;
+                }
+                else {//是关键词检索
+                    dataKeys = []
+                    kWs = [argValue]
+                    for (var key in translation) {
+                        if (translation[key].indexOf(argValue) > -1) {
+                            kWs.push(key);
+                            console.log("Translate=[" + key + ']maybe is [' + translation[key] + ']')
+                        }
+                    }
+                    console.log(kWs)
+                    for (var kw of kWs) {
+                        for (var key in data) {
+                            if (data[key]['GallaryName'].toLowerCase().indexOf(kw.toLowerCase()) > -1) {
+                                dataKeys.push(key)
+                                continue;
+                            }
+                            var iflag = false;
+                            for (row in data[key]['tags']) {
+                                if (iflag) {
+                                    break;
+                                }
+                                for (var tag of data[key]['tags'][row]) {
+                                    if (tag.toLowerCase().indexOf(kw.toLowerCase()) > -1) {
+                                        dataKeys.push(key);
+                                        iflag = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    dataKeys = [...new Set(dataKeys)];
+                    dataKeys.sort(sortNum);
+                    totalCount = dataKeys.length;
+                }
+            }
+        }
+        for (var i = 0; i < 32 && count < totalCount; i++, count++) {
+            addImg(i);
+            console.log("初始化 添加" + i)
+        }
+        function setSingleBox() {//更新最后一个
+            console.log("更新窗口")
+            var wrap = document.getElementById('wrap');
+            var boxs = getClass(wrap, 'box');
+            if (boxs.length == 0) {
+                return;
+            }
+            var boxW = boxs[0].offsetWidth;
+            var colsNum = Math.floor(document.documentElement.clientWidth / boxW);
+
+            for (var i = 1; i < colsNum; i++) {
+                if (boxs[i] != undefined) {
+                    setStyle(boxs[i], 0, boxs[i - 1].offsetWidth * i, i);
+                }
+            }
+            wrap.style.width = boxW * colsNum + 'px';
+            var everyH = [];
+            for (var i = 0; i < boxs.length; i++) {
+                if (i < colsNum) {
+                    everyH[i] = boxs[i].offsetHeight;
+                }
+                else {
+                    var miniH = Math.min.apply(Math, everyH);
+                    var miniIndex = 0;
+                    for (index in everyH) {
+                        if (everyH[index] == miniH) {
+                            miniIndex = index;
+                            break;
+                        }
+                    }
+                    if (i == boxs.length - 1) {
+                        setStyle(boxs[i], miniH, boxs[miniIndex].offsetLeft, i);
+                    }
+                    everyH[miniIndex] += boxs[i].offsetHeight;
+                }
+            }
+        }
+
+
+        function addImg(i) {
+            totalAddingImges += 1;
+            var key = dataKeys[i];//GID_TOKEN
+            preLoadImage[i] = new Image();
+            preLoadImage[i].src = './cover/' + key + '.jpg'
+            preLoadImage[i].onload = function () {
+                wrap.append(`
+                <div class="box" id="${"boxDiv_" + dataKeys[i]}" >
+                    <div class="info">
+                        <a href="${'viewing.html?value=' + encodeURI(key)}" target="_blank" >
+                            <div class="pic" id="${"picDiv_" + dataKeys[i]}">
+                            </div>
+                        </a>  
+                        <div class="title">
+                            <a href="javascript:downloadZip('${key}')">${data[key].GallaryName}</a>
+                        </div>
+                        <div class="processContainer">
+                            <div id="processbar_${key}" class="processBar">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `)
+                document.getElementById("picDiv_" + dataKeys[i]).appendChild(preLoadImage[i]);
+                setSingleBox()
+                totalAddingImges -= 1;
+            }
+        }
+        function rollingScroll() {
+            hidenOrDisplayed()
+            loadImage();
+        }
+        var last_height = $(document).scrollTop();
+        var currentH = -130;
+        function hidenOrDisplayed() {
+            var new_height = $(document).scrollTop();
+            var navigation_height = $('#search').outerHeight();
+            if (new_height < last_height) {
+                if (currentH >= -130) {
+                    currentH = -130;
+                }
+                else {
+                    currentH += (last_height - new_height);
+                    if (currentH >= -130) {
+                        currentH = -130;
+                    }
+                    $('.searchBar').css({
+                        'margin-top': currentH
+                    })
+                }
+
+            }
+            else {
+                if (currentH <= -300) {
+                    currentH = -300;
+                }
+                else {
+                    currentH -= (new_height - last_height);
+                    if (currentH <= -300) {
+                        currentH = -300;
+                    }
+                    $('.searchBar').css({
+                        'margin-top': currentH
+                    })
+                }
+            }
+            last_height = new_height;
+        }
+        function initaling() {
+            console.log("页面加载")
+        }
+        function loadImage() {
+            console.log(totalAddingImges)
+            if (totalAddingImges == 0 && getCheck()) {
+                for (var i = count; count < i + 10 && count < totalCount; count++) {
+                    addImg(count);
+                }
+            }
+        }
+        function getLastH() {
+            var boxs = getClass(wrap, 'box');
+            return boxs[boxs.length - 1].offsetTop + boxs[boxs.length - 1].offsetHeight;
+        }
+        function getCheck() {
+            var documentH = document.documentElement.clientHeight;
+            var scrollH = document.documentElement.scrollTop || document.body.scrollTop;
+            return documentH + scrollH >= (getLastH() - 1500) ? true : false;
+        }
+        function getClass(wrap, className) {
+            var wrap = document.getElementById('wrap');
+            var obj = wrap.getElementsByTagName('*');
+            var arr = [];
+            for (var i = 0; i < obj.length; i++) {
+                if (obj[i].className == className) {
+                    arr.push(obj[i]);
+                }
+            }
+            return arr;
+        }
+        var lastColsNum = 0;
+        function resizeWindow() {
+            var wrap = document.getElementById('wrap');
+            var boxs = getClass(wrap, 'box');
+            var boxW = boxs[0].offsetWidth;
+            var colsNum = Math.floor(document.documentElement.clientWidth / boxW);
+            if (lastColsNum != colsNum) {
+                updateWindow();
+            }
+        }
+        function updateWindow() {
+            console.log("更新窗口")
+            var wrap = document.getElementById('wrap');
+            var boxs = getClass(wrap, 'box');
+            if (boxs.length == 0) {
+                return;
+            }
+            var boxW = boxs[0].offsetWidth;
+            var colsNum = Math.floor(document.documentElement.clientWidth / boxW);
+            if (lastColsNum != colsNum) {
+                lastColsNum = colsNum;
+                for (var i = 1; i < colsNum; i++) {
+                    if (boxs[i] != undefined) {
+                        setStyle(boxs[i], 0, boxs[i - 1].offsetWidth * i, i);
+                    }
+                }
+            }
+            wrap.style.width = boxW * colsNum + 'px';
+            var everyH = [];
+            for (var i = 0; i < boxs.length; i++) {
+                if (i < colsNum) {
+                    everyH[i] = boxs[i].offsetHeight;
+                }
+                else {
+                    var miniH = Math.min.apply(Math, everyH);
+                    var miniIndex = 0;
+                    for (index in everyH) {
+                        if (everyH[index] == miniH) {
+                            miniIndex = index;
+                            break;
+                        }
+                    }
+                    setStyle(boxs[i], miniH, boxs[miniIndex].offsetLeft, i);
+                    everyH[miniIndex] += boxs[i].offsetHeight;
+                }
+            }
+        }
+        function setStyle(box, top, left, index) {
+
+            $(box).css({
+                'position': 'absolute',
+                'top': top,
+                "left": left,
+                "opacity": "1"
+            });
+
+        }
+        function enterSearching(event) {
+            console.log('enter')
+            if (event.keyCode == 13) {
+                search();
+            }
+        }
+        function search() {
+            searchWoed = document.getElementById("searchWord").value
+            if ("" == searchWoed) {
+                window.location.href = "index.html"
+                return
+            }
+            console.log("searching" + searchWoed)
+            window.location.href = "?searching=" + searchWoed
+        }
+        function openmenu() {
+            $('.sidemenu').toggleClass('active');
+            $('.mask').toggleClass('active');
+            $('.mask').css({
+                'width': '100%'
+            })
+        }
+        function closemenu() {
+            $('.sidemenu').toggleClass('active');
+            $('.mask').toggleClass('active');
+            setTimeout(
+                function () {
+                    $('.mask').css({
+                        'width': '0%'
+                    })
+                    console.log('width->0')
+                }
+                , 200);
+        }
+        function changeSortOrder(sortOrder) {
+            if (sortOrder == 'random') {
+                console.log("random sort order")
+                wrap.empty()
+                var dict = new Array();
+                for (var key of dataKeys) {
+                    dict[key] = Math.random();
+                }
+                dataKeys.sort(function (a, b) {
+                    return dict[a] - dict[b];
+                })
+                window.scrollTo(0, 0);
+                count = 0;
+                lastColsNum = 0;
+                last_height = $(document).scrollTop();
+                for (var i = 0; i < 10 && count < totalCount; i++, count++) {
+                    addImg(i);
+                }
+                // updateWindow()
+            }
+            else if (sortOrder == 'order') {
+                console.log("order sort order")
+                wrap.empty();
+                window.scrollTo(0, 0);
+                count = 0;
+                lastColsNum = 0;
+                last_height = $(document).scrollTop();
+                for (var i = 0; i < 20 && count < totalCount; i++, count++) {
+                    addImg(i);
+                }
+                setTimeout(
+                    function () {
+                        rollingScroll()
+                    }
+                    , 1000);
+            }
+        }
+        function menuAnime(itemID) {
+            $("#" + itemID + " .smenu").toggleClass("active");
+        }
+
+
+        function zipImage(info, GID_TOKEN) {
+            for (var i = 0; i < info['pics'].length; i++) {
+                const pic = ("./Gallarys/" + encodeURIComponent(info['info']['fileName']) + "/" + info['pics'][i])
+                tempImageSet[GID_TOKEN]['urls'][i] = pic //先存储地址
+            }
+            tempImageSet[GID_TOKEN]['pics'] = info['pics']//图片文件数组
+            tempImageSet[GID_TOKEN]['length'] = info['pics'].length//总长度
+            tempImageSet[GID_TOKEN]['gallaryName'] = info['info']['gallaryName']//存储文件名
+            tempImageSet[GID_TOKEN]['zipObject'] = new JSZip()//zip对象
+            tempImageSet[GID_TOKEN]['zipObject'].file("info.json", JSON.stringify(info, null, "\t"));
+            getTempImage(GID_TOKEN, 0)
+        }
+
+        function getTempImage(GID_TOKEN, index) {
+            const url = tempImageSet[GID_TOKEN]['urls'][index]//取出地址
+            fetch(url).then(function (response) {
+                return response.blob()
+            }).then(function (blob) {
+                const bar = $('#processbar_' + GID_TOKEN)
+                bar.css({
+                    "width": (240 / tempImageSet[GID_TOKEN]['length']) * index
+                })
+                tempImageSet[GID_TOKEN]['zipObject'].file(tempImageSet[GID_TOKEN]['pics'][index], blob);//直接压缩
+                if (index == tempImageSet[GID_TOKEN]['length'] - 1) {//如果是最后一个
+                    console.log("OK")
+                    tempImageSet[GID_TOKEN]['zipObject'].generateAsync({ type: "blob" })
+                        .then(function (content) {
+                            saveAs(content, tempImageSet[GID_TOKEN]['gallaryName']);
+                            $("#downloadingdMask_" + GID_TOKEN).remove()
+                            bar.css({
+                                "width": 260
+                            })
+                        });
+
+                }
+                else {
+                    getTempImage(GID_TOKEN, index + 1)
+                }
+            })
+        }
+
+        var tempImageSet = {}
+
+        function downloadZip(GID_TOKEN) {
+            var box = $("#boxDiv_" + GID_TOKEN);
+            const height = box.outerHeight() - 20;
+            box.append(
+                `
+                <div id="downloadingdMask_${GID_TOKEN}" style = "
+                    position: absolute;
+                    top: 10px;
+                    left: 10px;
+                    background-color: rgba(0, 0, 0, 0.1);
+                    width: 280px;
+                    height: ${height}px;
+                    border-radius: 4px;
+                ">
+                <img src="./souces/loading.gif" style="position:absolute;right:5px;bottom:5px;width:20px;"/>
+                </div>
+                        `
+            )
+            var sourcesDir = encodeURIComponent(data[GID_TOKEN].path)
+            var profile = sourcesDir + "/profile.js" //kokodayo
+            fetch(profile).then(function (response) {
+                return response.text()
+            }).then(function (text) {
+                const info = JSON.parse(text.substring(10, text.length - 1))
+                tempImageSet[GID_TOKEN] = {}
+                tempImageSet[GID_TOKEN]['urls'] = {}
+                zipImage(info, GID_TOKEN)
+            })
+        }
+
+
+        window.addEventListener('load', initaling);
+        window.addEventListener('scroll', rollingScroll);
+        window.addEventListener('resize', resizeWindow)
+    </script>
+</body>

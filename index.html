@@ -26,23 +26,26 @@
 
     </div>
     <div class='searchBar'>
-        <button id="openmenu" onclick="openmenu()"><img src="./menu.png"></button>
+        <button id="openmenu" onclick="openmenu()"><img src="./souces/menu.png"></button>
         <input type="text" id="searchWord" onkeydown="enterSearching(event)" />
-        <button id="search" onclick="search()"><img src="./search.png "> </button>
+        <button id="search" onclick="search()"><img src="./souces/search.png "> </button>
     </div>
 
     <div id="wrap">
 
     </div>
     <script src="./ajaxjs/jquery-1.7.2.js"></script>
-    <script src="./data.js"></script>
+    <script src="./Data.js?ver=19"></script>
     <script src="./translation.js"></script>
+    <script src="./jsZIP/jszip.min.js"></script>
+    <script src="./jsZIP/FileSaver.js"></script>
     <script type="text/javascript">
+        var totalAddingImges = 0;//处于请求队列中的图片的数量
         var preLoadImage = []
         var wrap = $('#wrap');
         var dataKeys = Object.keys(data);
         function sortNum(a, b) {
-            return parseInt(b) - parseInt(a);//JS里具有data  datakeys考虑到搜索需要 动态生成
+            return parseInt(b.split("_")[0]) - parseInt(a.split("_")[0]);//JS里具有data  datakeys考虑到搜索需要 动态生成
         }
         dataKeys.sort(sortNum);
         var count = 0, totalCount = dataKeys.length;
@@ -100,12 +103,12 @@
                 }
             }
         }
-        for (var i = 0; i < 32 && count < totalCount; i++ , count++) {
+        for (var i = 0; i < 32 && count < totalCount; i++, count++) {
             addImg(i);
             console.log("初始化 添加" + i)
         }
         function setSingleBox() {//更新最后一个
-            console.log("添加单个")
+            console.log("更新窗口")
             var wrap = document.getElementById('wrap');
             var boxs = getClass(wrap, 'box');
             if (boxs.length == 0) {
@@ -113,12 +116,10 @@
             }
             var boxW = boxs[0].offsetWidth;
             var colsNum = Math.floor(document.documentElement.clientWidth / boxW);
-            if (lastColsNum != colsNum) {
-                lastColsNum = colsNum;
-                for (var i = 1; i < colsNum; i++) {
-                    if (boxs[i] != undefined) {
-                        setStyle(boxs[i], 0, boxs[i - 1].offsetWidth * i, i);
-                    }
+
+            for (var i = 1; i < colsNum; i++) {
+                if (boxs[i] != undefined) {
+                    setStyle(boxs[i], 0, boxs[i - 1].offsetWidth * i, i);
                 }
             }
             wrap.style.width = boxW * colsNum + 'px';
@@ -143,8 +144,10 @@
                 }
             }
         }
+
+
         function addImg(i) {
-            // var key = dataKeys[i]; //偶尔会放大看  所以转码为宽度最大780
+            totalAddingImges += 1;
             var key = dataKeys[i];//GID_TOKEN
             preLoadImage[i] = new Image();
             preLoadImage[i].src = './cover/' + key + '.jpg'
@@ -157,19 +160,20 @@
                             </div>
                         </a>  
                         <div class="title">
-                            <a>${data[key].GallaryName}</a>
+                            <a href="javascript:downloadZip('${key}')">${data[key].GallaryName}</a>
+                        </div>
+                        <div class="processContainer">
+                            <div id="processbar_${key}" class="processBar">
+                            </div>
                         </div>
                     </div>
                 </div>
                 `)
                 document.getElementById("picDiv_" + dataKeys[i]).appendChild(preLoadImage[i]);
                 setSingleBox()
+                totalAddingImges -= 1;
             }
         }
-
-
-
-
         function rollingScroll() {
             hidenOrDisplayed()
             loadImage();
@@ -214,7 +218,8 @@
             console.log("页面加载")
         }
         function loadImage() {
-            if (getCheck()) {
+            console.log(totalAddingImges)
+            if (totalAddingImges == 0 && getCheck()) {
                 for (var i = count; count < i + 10 && count < totalCount; count++) {
                     addImg(count);
                 }
@@ -346,7 +351,7 @@
                 count = 0;
                 lastColsNum = 0;
                 last_height = $(document).scrollTop();
-                for (var i = 0; i < 10 && count < totalCount; i++ , count++) {
+                for (var i = 0; i < 10 && count < totalCount; i++, count++) {
                     addImg(i);
                 }
                 // updateWindow()
@@ -358,7 +363,7 @@
                 count = 0;
                 lastColsNum = 0;
                 last_height = $(document).scrollTop();
-                for (var i = 0; i < 20 && count < totalCount; i++ , count++) {
+                for (var i = 0; i < 20 && count < totalCount; i++, count++) {
                     addImg(i);
                 }
                 setTimeout(
@@ -371,6 +376,82 @@
         function menuAnime(itemID) {
             $("#" + itemID + " .smenu").toggleClass("active");
         }
+
+
+        function zipImage(info, GID_TOKEN) {
+            for (var i = 0; i < info['pics'].length; i++) {
+                const pic = ("./Gallarys/" + encodeURIComponent(info['info']['fileName']) + "/" + info['pics'][i])
+                tempImageSet[GID_TOKEN]['urls'][i] = pic //先存储地址
+            }
+            tempImageSet[GID_TOKEN]['pics'] = info['pics']//图片文件数组
+            tempImageSet[GID_TOKEN]['length'] = info['pics'].length//总长度
+            tempImageSet[GID_TOKEN]['gallaryName'] = info['info']['gallaryName']//存储文件名
+            tempImageSet[GID_TOKEN]['zipObject'] = new JSZip()//zip对象
+            tempImageSet[GID_TOKEN]['zipObject'].file("info.json", JSON.stringify(info, null, "\t"));
+            getTempImage(GID_TOKEN, 0)
+        }
+
+        function getTempImage(GID_TOKEN, index) {
+            const url = tempImageSet[GID_TOKEN]['urls'][index]//取出地址
+            fetch(url).then(function (response) {
+                return response.blob()
+            }).then(function (blob) {
+                const bar = $('#processbar_' + GID_TOKEN)
+                bar.css({
+                    "width": (240 / tempImageSet[GID_TOKEN]['length']) * index
+                })
+                tempImageSet[GID_TOKEN]['zipObject'].file(tempImageSet[GID_TOKEN]['pics'][index], blob);//直接压缩
+                if (index == tempImageSet[GID_TOKEN]['length'] - 1) {//如果是最后一个
+                    console.log("OK")
+                    tempImageSet[GID_TOKEN]['zipObject'].generateAsync({ type: "blob" })
+                        .then(function (content) {
+                            saveAs(content, tempImageSet[GID_TOKEN]['gallaryName']);
+                            $("#downloadingdMask_" + GID_TOKEN).remove()
+                            bar.css({
+                                "width": 260
+                            })
+                        });
+
+                }
+                else {
+                    getTempImage(GID_TOKEN, index + 1)
+                }
+            })
+        }
+
+        var tempImageSet = {}
+
+        function downloadZip(GID_TOKEN) {
+            var box = $("#boxDiv_" + GID_TOKEN);
+            const height = box.outerHeight() - 20;
+            box.append(
+                `
+                <div id="downloadingdMask_${GID_TOKEN}" style = "
+                    position: absolute;
+                    top: 10px;
+                    left: 10px;
+                    background-color: rgba(0, 0, 0, 0.1);
+                    width: 280px;
+                    height: ${height}px;
+                    border-radius: 4px;
+                ">
+                <img src="./souces/loading.gif" style="position:absolute;right:5px;bottom:5px;width:20px;"/>
+                </div>
+                        `
+            )
+            var sourcesDir = encodeURIComponent(data[GID_TOKEN].path)
+            var profile = sourcesDir + "/profile.js" //kokodayo
+            fetch(profile).then(function (response) {
+                return response.text()
+            }).then(function (text) {
+                const info = JSON.parse(text.substring(10, text.length - 1))
+                tempImageSet[GID_TOKEN] = {}
+                tempImageSet[GID_TOKEN]['urls'] = {}
+                zipImage(info, GID_TOKEN)
+            })
+        }
+
+
         window.addEventListener('load', initaling);
         window.addEventListener('scroll', rollingScroll);
         window.addEventListener('resize', resizeWindow)

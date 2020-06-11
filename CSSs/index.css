@@ -7,6 +7,10 @@ body {
     margin: 0;
     background: #00796B;
 }
+body::-webkit-scrollbar {
+    width: 0 !important
+}
+
 img {
     border: none;
 }
@@ -55,6 +59,7 @@ a:hover {
     padding: 10px;
     border: none;
     float: left;
+    
 }
 
 
@@ -87,7 +92,7 @@ a:hover {
     text-indent: 10px;
     width: 260px;
     margin: 0 auto;
-    line-height: 40px;
+    line-height: 32px;
     text-align: center;
     color: #666;
     font-size: 20px;
@@ -216,4 +221,52 @@ a:hover {
 
 .smenu a:hover:before{
     opacity: 1;
+}
+.viewMask{
+    position: fixed;
+    margin-top: -200px;
+    width: 100%;
+    height: 100%;
+    background-color:rgba(0, 0, 0, 0);
+    transition: background-color .2s;
+    z-index: 0;
+}
+
+.viewingPage{
+    width: 982px;            
+    margin-top: 0px;
+    display: flex;
+    position: fixed;
+    z-index: 10;
+    margin-left: -491px;
+    left: 50%;
+    height: 100%;
+}
+viewingPage::-webkit-scrollbar {
+    width: 0 !important
+}
+
+.closeButton{
+    position: fixed;
+    bottom: 36px;
+    right: 36px;
+    height: 72px;
+    width: 72px;
+    border-radius: 36px;
+    background: rgba(255, 255, 255, 0.36);
+    z-index: 11;
+    box-shadow: 0 0 11px rgba(0, 0, 0, 0.16);
+}
+
+.processContainer{
+    width:280px;
+    height:15px;    
+}
+
+.processBar{
+    background:#E91E63;
+    height: 10px;
+    width:0px;
+    border-radius: 4px;
+    margin:10px;                        
 }

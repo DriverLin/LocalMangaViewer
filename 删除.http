@@ -1,0 +1,14 @@
+###
+post http://localhost:8080/deleteGallarys
+
+[
+    "1644324_1badf5383d"
+]
+
+
+
+
+
+
+###
+get http://localhost:8080/

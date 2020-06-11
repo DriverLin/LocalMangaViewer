@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>viewing</title>
+    <style type="text/css">
+        body::-webkit-scrollbar {
+            width: 0 !important
+        }
+
+        body {
+            padding: 0;
+            margin: 0;
+            background: #00796B;
+        }
+
+        .header {
+            width: 965px;
+            display: block;
+            transition: 0.8s ease-in-out;
+            margin: auto auto auto;
+            overflow: hidden;
+            margin-top: calc(-1*100%);
+        }
+
+        .active.header {
+            margin-top: 0;
+        }
+
+        .infoContainer {
+            display: inline-block;
+            width: 935px;
+            height: auto;
+            border: 15px solid #ffffff;
+            margin: 80px auto;
+            background-color: #ffffff;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            left: 0%;
+        }
+
+
+
+        .infoContainer #title {
+            text-align: center;
+            margin: 15px auto;
+            font-size: 10px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #000;
+        }
+
+        .infoContainer #content {
+            width: 935px;
+            height: auto;
+        }
+
+        #content #cover {
+            height: auto;
+            width: 50%;
+            float: left;
+        }
+
+        #cover img {
+            max-height: 460px;
+            max-width: 460px;
+        }
+
+        #content #tags {
+            height: auto;
+            width: 48%;
+            float: right;
+        }
+
+        .boxer {
+            width: 935px;
+            /* max-height: 2000px; */
+            border: 15px solid #ffffff;
+            margin: 10px auto;
+            background-color: #ffffff;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: width 0.8s;
+        }
+
+        .loading.boxer {
+            /* max-height: 0px; */
+            border: 5px solid #ffffff;
+            width: 10px;
+        }
+
+        .boxer .pic {
+            width: 935px;
+        }
+
+        .pic img {
+            width: 935px;
+            display: block;
+        }
+
+        td .row {
+            color: #ffffff;
+            background-color: #C2185B;
+            border: 3px solid #C2185B;
+            background-color: #C2185B;
+            border-radius: 3px;
+            height: 30px;
+            width: 80px;
+            outline: 0;
+            font-size: 16px;
+            margin-top: 10px;
+            text-align: right;
+        }
+
+        td .tag {
+            color: #ffffff;
+            background-color: #00796B;
+            border: 3px solid #00796B;
+            background-color: #00796B;
+            border-radius: 3px;
+            height: 30px;
+            outline: 0;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .download {
+            height: 38px;
+            width: 38px;
+
+            opacity: 0;
+            transition: 0.5s;
+            position: absolute;
+            bottom: 0px;
+            right: 10px;
+        }
+
+        .active.download {
+            display: block;
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <section id="title">
+    </section>
+
+    <div id="header" class="header">
+
+    </div>
+
+    <div id="wrap">
+        <div class="mask"></div>
+    </div>
+
+    <script src="./ajaxjs/jquery-1.7.2.js"></script>
+    <script src="./data.js"></script>
+    <script src="./translation.js"></script>
+    <script src="./jsZIP/jszip.min.js"></script>
+    <script src="./jsZIP/FileSaver.js"></script>
+    <script type="text/javascript">
+
+        var loadingGIF = './souces/loading.gif'
+        fetch("./souces/loading.gif").then(function (response) {
+            return response.blob();
+        }).then(function (blob) {
+            loadingGIF = URL.createObjectURL(blob);
+        }
+        )//加载图标
+        var loc = location.href;
+        var n1 = loc.length;
+        var n2 = loc.indexOf('value=');
+        var gidtoken = decodeURI(loc.substr(n2 + 6, n1 - n2));// 传入相对./的目录    dir/dir/dir/[文件]  
+        var sourcesDir = encodeURIComponent(data[gidtoken].path)
+        var profile = sourcesDir + "/profile.js" //kokodayo
+        console.log("load[" + profile + "]")
+        $(document.body).append(`<script src="${profile}"><\/script>`);//导入配置文件 配置文件和图片文件在同一目录
+        console.log(data)
+        var totalLength = data['pics'].length
+        cover = new Image()
+
+        $('#header').append(`
+                <div class="infoContainer" id="infoContainer">
+                    <div id="title">
+                        <h1>
+                        ${data['info']['gallaryName']}
+                        </h1>
+                    </div>
+                    <div id="content">
+                        <div id="cover">
+                            <img src="./${sourcesDir}/${data['pics'][0]}">
+                        </div>
+                        <div id="tags">
+                            <table id='table' >
+                                <tbody id='tbody'>      
+                                </tbody>
+                            </table>
+                        </div>
+                        <a class="download" onclick="downloadRequset()" ><img width="32px" height="32px" id="downloadState" src="./souces/download.png"/></a>
+                    </div>
+                </div>
+            `)
+        $('.download').toggleClass('active')
+        var imageLoadingOver = data['pics'].length
+        for (value of ['language', 'parody', 'group', 'artist', 'character', 'female', 'male', 'reclass', 'misc']) {
+            console.log('val=', value)
+            if (data['info'][value].length > 0) {
+                console.log(data['info'][value])
+                $('#header #tags #table #tbody').append(`
+                    <tr>
+                        <td valign="top"><button class='row'>${translation[value]}:&nbsp</button></td>
+                        <td id="${value}"></td>    
+                    </tr>
+                `)
+                for (tag of data['info'][value]) {
+                    (document.getElementById(value)).insertAdjacentHTML('afterBegin', `
+                        <a href='managePage.html?searching=${value}:${tag}' target="_blank" ><button class='tag'>${translation[tag] == undefined ? tag : translation[tag]}</button></a>
+                    `)
+                }
+            }
+        }
+
+        var wrap = $('#wrap');
+        var imageSet = {}
+        function addImg(index) {
+            const id = "#image_" + index;
+            console.log('i=' + index)
+            console.log("loading" + `img src="./${sourcesDir}/${data['pics'][index]}"`)
+            wrap.append(`<div class="boxer" id=${"image_" + index}></div>`)
+            $(id).addClass("loading")
+            fetch(`./${sourcesDir}/${data['pics'][index]}`).then(function (response) {
+                return response.blob();
+            }).then(function (blob) {
+                const objectURL = URL.createObjectURL(blob);
+                $(id).append(`
+                        <div class="pic"><img src="${objectURL}"></div>
+                    `)
+                $(id).removeClass("loading")
+                imageSet[data['pics'][index]] = blob;
+                imageLoadingOver--
+            });
+        }
+        function updateWindow() {
+            for (var i = 0; i < totalLength; i++) {
+                addImg(i)
+            }
+            $('#header').toggleClass('active')
+        }
+
+        var downloading = false
+        function downloadRequset() {
+            if (downloading) {
+                console.log("已近在下载了")
+                return;
+            }
+            downloading = true;
+            $('.download').toggleClass('active')
+            setTimeout(function () {
+                $('#downloadState').attr("src", loadingGIF);
+                $('.download').toggleClass('active')
+            }, 500)
+            ifLocked()
+        }
+        function ifLocked() {
+            if (imageLoadingOver == 0) {
+                downloadZip()
+            }
+            else {
+                console.log("waiting for image to load")
+                setTimeout(function () {
+                    ifLocked()
+                }, 100)
+            }
+        }
+
+
+        function downloadZip() {
+            var zip = new JSZip();
+            zip.file("info.json", JSON.stringify(data, null, "\t"));
+            for (key in imageSet) {
+                zip.file(key, imageSet[key]);
+            }
+            zip.generateAsync({ type: "blob" })
+                .then(function (content) {
+                    saveAs(content, data['info']['gallaryName']);
+                    $('.download').toggleClass('active')
+                    setTimeout(function () {
+                        $('#downloadState').attr("src", './souces/ok.png');
+                        $('.download').toggleClass('active')
+                        setTimeout(function () {
+                            $('.download').toggleClass('active')
+                            setTimeout(function () {
+                                $('#downloadState').attr("src", './souces/download.png');
+                                $('.download').toggleClass('active')
+                                downloading = false;
+                            }, 500)
+                        }, 500)
+                    }, 500)
+                });
+        }
+
+        function resizeWindow() {
+            if (document.documentElement.clientWidth <= 960) {
+                console.log("over")
+            }
+        }
+        function getNext(vec) {
+            var boxers = [];
+            boxers.push(document.getElementsByClassName("infoContainer")[0]);
+            for (var box of document.getElementsByClassName("boxer")) {
+                boxers.push(box);
+            }
+            var scTop = document.documentElement.scrollTop;
+            var scBottom = scTop + window.innerHeight;
+            var index = 0, max = 0;
+            for (i = 0; i < boxers.length; i++) {
+                var height = boxers[i].getBoundingClientRect().height;
+                var boxTop = boxers[i].offsetTop;
+                var boxBottom = boxTop + height;
+                if (boxBottom < scTop || boxTop > scBottom) {
+                    continue;
+                }
+                var value = Math.min(scBottom, boxBottom) - Math.max(scTop, boxTop);
+                if (value / height > max) {
+                    max = value / height;
+                    index = i;
+                }
+            }
+            if (vec == 1)
+                return boxers[index == boxers.length - 1 ? index : index + 1];
+            else
+                return boxers[index == 0 ? 0 : index - 1]
+        }
+        function scNext() {
+            var elem = getNext(1);
+            var loc = elem.offsetTop - (window.innerHeight - elem.getBoundingClientRect().height) / 2
+            window.scrollTo({
+                top: loc,
+                behavior: "instant"
+            });
+        }
+        function scLast() {
+            var elem = getNext(0);
+            if (elem == document.getElementsByClassName("infoContainer")[0])
+                var loc = 0;
+            else
+                var loc = elem.offsetTop - (window.innerHeight - elem.getBoundingClientRect().height) / 2
+            window.scrollTo({
+                top: loc,
+                behavior: "instant"
+            });
+
+        }
+        kevent_SC_iFlag = true;
+        document.onkeydown = function (event) {
+            if (event.keyCode == 39 || event.keyCode == 32) {
+                kevent_SC_iFlag = false;
+                scNext();
+                kevent_SC_iFlag = true;
+                return false;
+            }
+            else if (event.keyCode == 37) {
+                kevent_SC_iFlag = false;
+                scLast();
+                kevent_SC_iFlag = true;
+                return false;
+            }
+        }
+        document.onclick = function (event) {
+            if (event.pageY > document.getElementsByClassName("infoContainer")[0].getBoundingClientRect().height + 80) {
+                if (event.pageX > window.innerWidth / 2) {
+                    scNext()
+                }
+                else {
+                    scLast();
+                }
+            }
+
+        }
+        window.addEventListener('load', updateWindow)
+        window.addEventListener('resize', resizeWindow)
+    </script>
+</body>
