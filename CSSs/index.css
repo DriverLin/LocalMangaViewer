@@ -16,12 +16,12 @@ img {
 }
 a {
     text-decoration: none;
-    color: #444;
+    color: #111;
 }
 a:hover {
-    color: #999;
+    color: #555;
 }
-/* 定义关键帧 */
+
 @-webkit-keyframes shade {
     from {
         opacity: 1;
@@ -62,16 +62,17 @@ a:hover {
     
 }
 
-
-
+#wrap .box .info .gallaryLink{
+    -webkit-tap-highlight-color:transparent;
+}
 
 #wrap .box .info {
     width: 280px;
     height: auto;
-    border-radius: 0px;
     box-shadow: 0 0 11px #666;
     background: #fff;
     border-radius: 4px;
+    overflow:hidden;
 }
 
 #wrap .box .info .pic {
@@ -79,15 +80,24 @@ a:hover {
     height: auto;
     margin: 0 auto;
     padding-top: 10px;
+    transition:  .2s;
+    padding-bottom : 18px;
 }
-#wrap .box .info .pic:hover {
-    -webkit-animation: shade 3s ease-in-out 1;
-    animation: shade 3s ease-in-out 1;
-}
+/* #wrap .box .info .pic:hover {
+    transform:scale(1.2);
+} */
+
 #wrap .box .info .pic img {
     width: 260px;
     height: auto;
+    transition:  .2s;
 }
+#wrap .box .info .pic img:hover {
+    /* width: 280px; */
+    transform:scale(1.1);
+}
+
+
 #wrap .box .info .title {
     text-indent: 10px;
     width: 260px;

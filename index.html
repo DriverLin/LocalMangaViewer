@@ -34,8 +34,11 @@
     <div id="wrap">
 
     </div>
+
+
+
     <script src="./ajaxjs/jquery-1.7.2.js"></script>
-    <script src="./Data.js?ver=19"></script>
+    <script src="./Data.js?ver=40"></script>
     <script src="./translation.js"></script>
     <script src="./jsZIP/jszip.min.js"></script>
     <script src="./jsZIP/FileSaver.js"></script>
@@ -45,7 +48,7 @@
         var wrap = $('#wrap');
         var dataKeys = Object.keys(data);
         function sortNum(a, b) {
-            return parseInt(b.split("_")[0]) - parseInt(a.split("_")[0]);//JS里具有data  datakeys考虑到搜索需要 动态生成
+            return (parseInt(b.split("_")[0]) - parseInt(a.split("_")[0]));//JS里具有data  datakeys考虑到搜索需要 动态生成
         }
         dataKeys.sort(sortNum);
         var count = 0, totalCount = dataKeys.length;
@@ -63,7 +66,7 @@
                             dataKeys.push(key)
                         }
                     }
-                    dataKeys.sort()
+                    dataKeys.sort(sortNum)
                     totalCount = dataKeys.length;
                 }
                 else {//是关键词检索
@@ -104,11 +107,9 @@
             }
         }
         for (var i = 0; i < 32 && count < totalCount; i++, count++) {
-            addImg(i);
-            console.log("初始化 添加" + i)
+            addImg(i, i);
         }
         function setSingleBox() {//更新最后一个
-            console.log("更新窗口")
             var wrap = document.getElementById('wrap');
             var boxs = getClass(wrap, 'box');
             if (boxs.length == 0) {
@@ -122,6 +123,7 @@
                     setStyle(boxs[i], 0, boxs[i - 1].offsetWidth * i, i);
                 }
             }
+            setStyle(boxs[0], 0, 0, 0);
             wrap.style.width = boxW * colsNum + 'px';
             var everyH = [];
             for (var i = 0; i < boxs.length; i++) {
@@ -146,16 +148,17 @@
         }
 
 
-        function addImg(i) {
-            totalAddingImges += 1;
-            var key = dataKeys[i];//GID_TOKEN
-            preLoadImage[i] = new Image();
-            preLoadImage[i].src = './cover/' + key + '.jpg'
-            preLoadImage[i].onload = function () {
-                wrap.append(`
+        function addImg(i, groupIndex) {
+            setTimeout(() => {
+                totalAddingImges += 1;
+                var key = dataKeys[i];//GID_TOKEN
+                preLoadImage[i] = new Image();
+                preLoadImage[i].src = './cover/' + key + '.jpg'
+                preLoadImage[i].onload = function () {
+                    wrap.append(`
                 <div class="box" id="${"boxDiv_" + dataKeys[i]}" >
                     <div class="info">
-                        <a href="${'viewing.html?value=' + encodeURI(key)}" target="_blank" >
+                        <a class="gallaryLink" href="${'viewing.html?value=' + encodeURI(key)}" target="_blank" >
                             <div class="pic" id="${"picDiv_" + dataKeys[i]}">
                             </div>
                         </a>  
@@ -169,10 +172,12 @@
                     </div>
                 </div>
                 `)
-                document.getElementById("picDiv_" + dataKeys[i]).appendChild(preLoadImage[i]);
-                setSingleBox()
-                totalAddingImges -= 1;
-            }
+                    document.getElementById("picDiv_" + dataKeys[i]).appendChild(preLoadImage[i]);
+                    setSingleBox()
+                    // $("#boxDiv_" + dataKeys[i]).toggleClass('active');
+                    totalAddingImges -= 1;
+                }
+            }, (groupIndex) * 100)
         }
         function rollingScroll() {
             hidenOrDisplayed()
@@ -218,10 +223,9 @@
             console.log("页面加载")
         }
         function loadImage() {
-            console.log(totalAddingImges)
             if (totalAddingImges == 0 && getCheck()) {
                 for (var i = count; count < i + 10 && count < totalCount; count++) {
-                    addImg(count);
+                    addImg(count, count - i);
                 }
             }
         }
@@ -232,7 +236,7 @@
         function getCheck() {
             var documentH = document.documentElement.clientHeight;
             var scrollH = document.documentElement.scrollTop || document.body.scrollTop;
-            return documentH + scrollH >= (getLastH() - 1500) ? true : false;
+            return documentH + scrollH >= (getLastH() - 0) ? true : false;
         }
         function getClass(wrap, className) {
             var wrap = document.getElementById('wrap');
@@ -292,15 +296,46 @@
                 }
             }
         }
+
+        var hasetStyle = [];
         function setStyle(box, top, left, index) {
+            if (hasetStyle.includes(box)) {
+                $(box).css({
+                    'position': 'absolute',
+                    // "transform": "scale(0)",
+                    'top': top,
+                    "left": left,
+                    "opacity": "1"
+                });
+                setTimeout(
+                    function () {
+                        $(box).css({
+                            'top': top,
+                            "transition": " transform .5s",
+                            "transform": "scale(1)",
+                        });
 
-            $(box).css({
-                'position': 'absolute',
-                'top': top,
-                "left": left,
-                "opacity": "1"
-            });
-
+                    }
+                    , 10);
+            } else {
+                hasetStyle.push(box)
+                $(box).css({
+                    'position': 'absolute',
+                    "transform": "scale(0)",
+                    'top': top,
+                    "left": left,
+                    "opacity": "1"
+                });
+                setTimeout(
+                    function () {
+                        $(box).css({
+                            'top': top,
+                            "transition": " transform .5s",
+                            "transform": "scale(1)",
+                        });
+                    }
+                    , 10);
+            }
         }
         function enterSearching(event) {
             console.log('enter')
@@ -351,8 +386,8 @@
                 count = 0;
                 lastColsNum = 0;
                 last_height = $(document).scrollTop();
-                for (var i = 0; i < 10 && count < totalCount; i++, count++) {
-                    addImg(i);
+                for (var i = 0; i < 32 && count < totalCount; i++, count++) {
+                    addImg(i, i);
                 }
                 // updateWindow()
             }
@@ -363,8 +398,9 @@
                 count = 0;
                 lastColsNum = 0;
                 last_height = $(document).scrollTop();
-                for (var i = 0; i < 20 && count < totalCount; i++, count++) {
-                    addImg(i);
+                dataKeys.sort(sortNum);
+                for (var i = 0; i < 32 && count < totalCount; i++, count++) {
+                    addImg(i, i);
                 }
                 setTimeout(
                     function () {

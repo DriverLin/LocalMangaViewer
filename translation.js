@@ -2178,7 +2178,7 @@ var translation = {
     "tyagama": "茶釜",
     "type.90": "TYPE.90",
     "u-jin": "游人",
-    "u-tom": "う\~とむ",
+    "u-tom": "う~とむ",
     "uchuu teiou": "宇宙帝王",
     "ueda john": "うえだジョン",
     "ueda yuu": "上田裕",
@@ -8177,7 +8177,7 @@ var translation = {
     "prince of tennis": "网球王子",
     "princess connect": "公主连结 Re",
     "princess crown": "公主王冠",
-    "princess holiday": "公主假日 \~回转苹果亭的一千零一夜\~",
+    "princess holiday": "公主假日 回转苹果亭的一千零一夜",
     "princess lover": "公主恋人",
     "princess maker": "美少女梦工场",
     "princess mononoke": "幽灵公主",
@@ -8648,5 +8648,5 @@ var translation = {
     "male": "男性",
     "misc": "杂项",
     "parody": "原作",
-    "reclass": "重分类",
-}
+    "reclass": "重分类"
+};

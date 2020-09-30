@@ -101,7 +101,7 @@
         td .row {
             color: #ffffff;
             background-color: #C2185B;
-            border: 0px;
+            border: 1px solid #C2185B;
             background-color: #C2185B;
             border-radius: 3px;
             height: 33px;
@@ -115,7 +115,7 @@
         td .tag {
             color: #ffffff;
             background-color: #00796B;
-            border: 0px;
+            border: 1px solid #00796B;
             background-color: #00796B;
             border-radius: 3px;
             height: 33px;
@@ -154,7 +154,7 @@
     </div>
 
     <script src="./ajaxjs/jquery-1.7.2.js"></script>
-    <script src="./Data.js?ver=19"></script>
+    <script src="./Data.js?ver=40"></script>
     <script src="./translation.js"></script>
     <script src="./jsZIP/jszip.min.js"></script>
     <script src="./jsZIP/FileSaver.js"></script>
@@ -240,14 +240,13 @@
         }
         function updateWindow() {
             $('#header').toggleClass('active')
-            setTimeout(function () {
-                for (var i = 0; i < totalLength; i++) {
-                    addImg(i)
-                }
-            }, 810)
-
+            setTimeout(
+                function () {
+                    for (var i = 0; i < totalLength; i++) {
+                        addImg(i)
+                    }
+                }, 810)
         }
-
         var downloading = false
         function downloadRequset() {
             if (downloading) {
